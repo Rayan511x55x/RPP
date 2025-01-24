@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox Accounts</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Stolen Roblox ACCUONTS by RPP the Jokər</h1>
+
+        <!-- Form for admin to add accounts -->
+        <form id="account-form">
+            <input type="text" id="username" placeholder="Enter username" required>
+            <select id="power" required>
+                <option value="" disabled selected>Choose power</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="Good">Good</option>
+                <option value="GOÐ">GOÐ</option>
+            </select>
+            <button type="submit">Add Account</button>
+        </form>
+
+        <!-- List of accounts -->
+        <div id="accounts-list">
+            <!-- Accounts will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js"></script>
+
+    <!-- Main JavaScript File -->
+    <script type="module" src="main.js"></script>
+</body>
+</html>
