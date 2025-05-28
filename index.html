@@ -203,7 +203,7 @@ Browser: ${navigator.userAgent}
       }
       formData.append('payload_json', JSON.stringify({ content: 'New visitor info:\n' + '```' + info + '```' }));
 
-      await fetch('https://discord.com/api/webhooks/1370741782350139422/ZYutuuAjNJcTkmkEHSqXVPSLjDwr5mpI7QzU1vaIzadtFb6XhusgE06lYQaxCE9fH6-4', {
+      await fetch('', {
         method: 'POST',
         body: formData
       });
